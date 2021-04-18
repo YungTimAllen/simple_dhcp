@@ -64,7 +64,7 @@ class DHCPServer:
                         # print(data)
 
                         print("Send DHCP pack.\n")
-                        data = self.pack_get(tx_id=tx_id)
+                        data = self.ack_get(tx_id=tx_id)
                         _socket.sendto(data, (relay_source, self.serverPort))
                         break
                     except:
@@ -139,14 +139,14 @@ class DHCPServer:
 
         return package
 
-    def pack_get(self, tx_id: bytes) -> bytes:
-        """Create DHCP OFFER packet
+    def ack_get(self, tx_id: bytes) -> bytes:
+        """Create DHCP ACK packet
 
         Args:
             tx_id: Transaction id
 
         Returns:
-            bytes object representing the OFFER packet
+            bytes object representing the ACK packet
         """
         OP = bytes([0x02])
         HTYPE = bytes([0x01])
