@@ -1,66 +1,86 @@
 #!/usr/bin/env python3
+"""Python implementation of a DHCP server, to serve clients behind a DHCP relay
+
+Notes:
+    https://docs.microsoft.com/en-us/windows-server/troubleshoot/dynamic-host-configuration-protocol-basics"""
 import socket
 
-MAX_BYTES = 1024
 
-serverPort = 67
-clientPort = 68
+class DHCPServer:
+    """DHCP Server, to include socket est., packet building, and DORA processing"""
 
+    MAX_BYTES = 1024
+    serverPort = 67
+    clientPort = 68
 
-class DHCP_server(object):
     def server(self):
+        """Main method for this class. Includes blocking logic to capture packets"""
         print("DHCP server is starting...\n")
 
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        s.bind(("", serverPort))
-        dest = ("255.255.255.255", clientPort)
+        _socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        _socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        _socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        _socket.bind(("", self.serverPort))
 
         while 1:
             try:
                 print("Wait DHCP discovery.")
-                data, address = s.recvfrom(MAX_BYTES)
+
+                data, _ = _socket.recvfrom(self.MAX_BYTES)
+                # Second var was prev called "address"
+
                 print("Receive DHCP discovery.")
 
-                # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-                # print(bytes(data).hex())
+                # Load UDP packet payload to list<bytes>
                 packet_bytes = [data[i : i + 1] for i in range(len(data))]
-                print([b.hex() for b in packet_bytes])
+                # print([b.hex() for b in packet_bytes])
+
+                # Relay IP Address (giaddr)
                 relay_source = (
                     f"{str(int.from_bytes(packet_bytes[24], 'little'))}."
                     f"{str(int.from_bytes(packet_bytes[25], 'little'))}."
                     f"{str(int.from_bytes(packet_bytes[26], 'little'))}."
                     f"{str(int.from_bytes(packet_bytes[27], 'little'))}"
                 )
+                # print(relay_source)
 
+                # Transaction ID (xid)
                 tx_id = b"".join(packet_bytes[4:8])
-
-                print(relay_source)
+                # todo b"".join() is neat - where else can we do it? Private method?
+                # print(tx_id)
 
                 print("Send DHCP offer.")
-                data = DHCP_server.offer_get(tx_id=tx_id)
-                s.sendto(data, (relay_source, serverPort))
+
+                data = self.offer_get(tx_id=tx_id)
+                _socket.sendto(data, (relay_source, self.serverPort))
 
                 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
                 while 1:
                     try:
                         print("Wait DHCP request.")
-                        data, address = s.recvfrom(MAX_BYTES)
+                        data, address = _socket.recvfrom(self.MAX_BYTES)
                         print("Receive DHCP request.")
                         # print(data)
 
                         print("Send DHCP pack.\n")
-                        data = DHCP_server.pack_get(tx_id=tx_id)
-                        s.sendto(data, (relay_source, serverPort))
+                        data = self.pack_get(tx_id=tx_id)
+                        _socket.sendto(data, (relay_source, self.serverPort))
                         break
                     except:
                         raise
             except:
                 raise
 
-    def offer_get(tx_id):
+    def offer_get(self, tx_id: bytes) -> bytes:
+        """Create DHCP OFFER packet
+
+        Args:
+            tx_id: Transaction id
+
+        Returns:
+            bytes object representing the OFFER packet
+        """
 
         OP = bytes([0x02])
         HTYPE = bytes([0x01])
@@ -70,11 +90,8 @@ class DHCP_server(object):
         SECS = bytes([0x00, 0x00])
         FLAGS = bytes([0x80, 0x00])
         CIADDR = bytes([0x00, 0x00, 0x00, 0x00])
-        # YIADDR = bytes([0xC0, 0xA8, 0x01, 0x64])  # 192.168.1.100
         YIADDR = bytes([0x0A, 0x01, 0x02, 0x01])  # 10.1.2.1
-        # SIADDR = bytes([0xC0, 0xA8, 0x01, 0x01])  # 192.168.1.1
         SIADDR = bytes([0x0A, 0x01, 0x05, 0x05])  # 10.1.5.5
-        # GIADDR = bytes([0x00, 0x00, 0x00, 0x00])
         GIADDR = bytes([0x0A, 0x01, 0x02, 0x00])  # 10.1.2.0
         CHADDR1 = bytes([0xCA, 0x02, 0x8D, 0xBF])
         CHADDR2 = bytes([0x00, 0x08, 0x00, 0x00])
@@ -122,7 +139,15 @@ class DHCP_server(object):
 
         return package
 
-    def pack_get(tx_id):
+    def pack_get(self, tx_id: bytes) -> bytes:
+        """Create DHCP OFFER packet
+
+        Args:
+            tx_id: Transaction id
+
+        Returns:
+            bytes object representing the OFFER packet
+        """
         OP = bytes([0x02])
         HTYPE = bytes([0x01])
         HLEN = bytes([0x06])
@@ -131,11 +156,8 @@ class DHCP_server(object):
         SECS = bytes([0x00, 0x00])
         FLAGS = bytes([0x80, 0x00])
         CIADDR = bytes([0x00, 0x00, 0x00, 0x00])
-        # YIADDR = bytes([0xC0, 0xA8, 0x01, 0x64])  # 192.168.1.100
         YIADDR = bytes([0x0A, 0x01, 0x02, 0x01])  # 10.1.2.1
-        # SIADDR = bytes([0xC0, 0xA8, 0x01, 0x01])  # 192.168.1.1
         SIADDR = bytes([0x0A, 0x01, 0x05, 0x05])  # 10.1.5.5
-        # GIADDR = bytes([0x00, 0x00, 0x00, 0x00])
         GIADDR = bytes([0x0A, 0x01, 0x02, 0x00])  # 10.1.2.0
         CHADDR1 = bytes([0xCA, 0x02, 0x8D, 0xBF])
         CHADDR2 = bytes([0x00, 0x08, 0x00, 0x00])
@@ -184,5 +206,5 @@ class DHCP_server(object):
 
 
 if __name__ == "__main__":
-    dhcp_server = DHCP_server()
+    dhcp_server = DHCPServer()
     dhcp_server.server()
