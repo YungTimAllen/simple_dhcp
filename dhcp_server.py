@@ -193,7 +193,7 @@ class DHCPServer:
         # 192 bytes of padding
         # "Magic cookie"
         p_a = struct.pack(
-            "!BBBBIHHI4s4s4s6sHII192sI",
+            "!BBBB4sHHI4s4s4s6sHII192sI",
             0x2,
             0x1,
             0x6,
