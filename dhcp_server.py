@@ -2,16 +2,28 @@
 """Python implementation of a DHCP server, to serve clients behind a DHCP relay
 
 Notes:
-    https://docs.microsoft.com/en-us/windows-server/troubleshoot/dynamic-host-configuration-protocol-basics"""
+    https://docs.microsoft.com/en-us/windows-server/troubleshoot/dynamic-host-configuration-protocol-basics
+    https://docs.python.org/3/library/struct.html#format-characters
+"""
 import socket
+import struct
+import binascii
+
+
+import hexdump as hexdump
+
+# todo move this into some kind of class
+def mtob(chaddr: str) -> bytes:
+    return binascii.unhexlify(chaddr.replace(":", ""))
 
 
 class DHCPServer:
-    """DHCP Server, to include socket est., packet building, and DORA processing"""
+    """DHCP Server, to include socket estab, packet processing, and DORA"""
 
     MAX_BYTES = 1024
     serverPort = 67
     clientPort = 68
+    serverIP = "10.1.5.5"
 
     def server(self):
         """Main method for this class. Includes blocking logic to capture packets"""
@@ -72,6 +84,7 @@ class DHCPServer:
             except:
                 raise
 
+    # todo packet building should be in separate classes probably
     def offer_get(self, tx_id: bytes) -> bytes:
         """Create DHCP OFFER packet
 
@@ -139,6 +152,80 @@ class DHCPServer:
 
         return package
 
+    # todo the only way these params will ever get populated is after DISC is parsed by unpack
+    # so theres no reason to make them strings - keep them bytes like tx_id
+    def offer_get_2(
+        self,
+        tx_id: bytes,
+        yiaddr: str,
+        yiaddr_mask: str,
+        siaddr: str,
+        giaddr: str,
+        chaddr: str,
+    ) -> bytes:
+        """
+
+        Args:
+            tx_id:
+            ciaddr:
+            yiaddr:
+            siaddr:
+            giaddr:
+            chaddr:
+            yiaddr_mask:
+
+        Returns:
+
+        """
+        # Op Code (op) = 2 (0x2)
+        # Hardware Type (htype) = 1 (0x1) 10Mb Ethernet
+        # Hardware Address Length (hlen) = 6 (0x6)
+        # Hops (hops) = 0 (0x0)
+        # Transaction ID (xid) = 556223005 (0x21274A1D)
+        # Seconds (secs) = 0 (0x0)
+        # Flags (flags) = 0x8000
+        # Client IP Address (ciaddr) (Not used in DORA)
+        # Your IP Address (yiaddr)
+        # Server IP Address (siaddr)
+        # Relay IP Address (giaddr)
+        # MAC address
+        # 10 bytes of padding
+        # 192 bytes of padding
+        # "Magic cookie"
+        p_a = struct.pack(
+            "!BBBBIHHI4s4s4s6sHII192sI",
+            0x2,
+            0x1,
+            0x6,
+            1,
+            bytes.fromhex(tx_id),
+            0x0000,
+            0x8000,
+            0x00000000,
+            socket.inet_aton(yiaddr),
+            socket.inet_aton(siaddr),
+            socket.inet_aton(giaddr),
+            mtob(chaddr),
+            0x0000,
+            0x00000000,
+            0x00000000,
+            bytearray(192),
+            0x63825363,
+        )
+
+        # todo options should be passed as parameter?
+        options = [
+            bytes([53, 1, 2]),
+            bytes([54, 4, 0x0A, 0x01, 0x05, 0x05]),
+            bytes([51, 4]) + socket.inet_aton(self.serverIP),
+            bytes([1, 4]) + socket.inet_aton(yiaddr_mask),
+            bytes([3, 4]) + socket.inet_aton(giaddr),
+        ]
+
+        end = bytes([0xFF])
+
+        return p_a + b"".join(options) + end
+
     def ack_get(self, tx_id: bytes) -> bytes:
         """Create DHCP ACK packet
 
@@ -205,6 +292,28 @@ class DHCPServer:
         return package
 
 
+class DHCP_Packet:
+    def __init__(self, src_host, src_port, dst_host, dst_port, flags=0):
+        self.src_host = src_host
+        self.src_port = src_port
+        self.dst_host = dst_host
+        self.dst_port = dst_port
+        self.flags = flags
+
+
 if __name__ == "__main__":
     dhcp_server = DHCPServer()
+
+    hexdump.hexdump(
+        dhcp_server.offer_get_2(
+            bytes.fromhex("FEFEFEFE"),
+            "10.1.2.1",
+            "255.255.255.254",
+            "10.1.5.5",
+            "10.1.2.0",
+            "aa:bb:cc:dd:ee:ff",
+        )
+    )
+    print("-" * 64)
+
     dhcp_server.server()
