@@ -198,7 +198,7 @@ class DHCPServer:
             0x1,
             0x6,
             1,
-            bytes.fromhex(tx_id),
+            tx_id,
             0x0000,
             0x8000,
             0x00000000,
