@@ -18,7 +18,7 @@ def mtob(chaddr: str) -> bytes:
 
 
 class DHCPServer:
-    """DHCP Server, to include socket estab, packet processing, and DORA"""
+    """DHCP Server, to include socket estab, packet.py processing, and DORA"""
 
     MAX_BYTES = 1024
     serverPort = 67
@@ -43,7 +43,7 @@ class DHCPServer:
 
                 print("Receive DHCP discovery.")
 
-                # Load UDP packet payload to list<bytes>
+                # Load UDP packet.py payload to list<bytes>
                 packet_bytes = [data[i : i + 1] for i in range(len(data))]
                 # print([b.hex() for b in packet_bytes])
 
@@ -84,15 +84,15 @@ class DHCPServer:
             except:
                 raise
 
-    # todo packet building should be in separate classes probably
+    # todo packet.py building should be in separate classes probably
     def offer_get(self, tx_id: bytes) -> bytes:
-        """Create DHCP OFFER packet
+        """Create DHCP OFFER packet.py
 
         Args:
             tx_id: Transaction id
 
         Returns:
-            bytes object representing the OFFER packet
+            bytes object representing the OFFER packet.py
         """
 
         OP = bytes([0x02])
@@ -227,13 +227,13 @@ class DHCPServer:
         return p_a + b"".join(options) + end
 
     def ack_get(self, tx_id: bytes) -> bytes:
-        """Create DHCP ACK packet
+        """Create DHCP ACK packet.py
 
         Args:
             tx_id: Transaction id
 
         Returns:
-            bytes object representing the ACK packet
+            bytes object representing the ACK packet.py
         """
         OP = bytes([0x02])
         HTYPE = bytes([0x01])
