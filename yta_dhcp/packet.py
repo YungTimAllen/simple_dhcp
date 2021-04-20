@@ -59,7 +59,6 @@ class DHCPPacket:
     end: bytes = bytes([0xFF])
 
 
-# "!BBBB4sHHI4s4s4s6sHII192sI"
 def parse_packet(format_string: str, data: bytes) -> DHCPPacket:
     """Given raw dump of packets from wire representing a DHCP DISCOVER packet, and a well-known
     struct format-string, will read all fields and pack into a new DHCPPacket object
