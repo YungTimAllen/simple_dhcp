@@ -35,8 +35,6 @@ class DHCPServer:
                 packet.FMTSTR_DHCP, raw_discover_packet
             )
 
-            print(discover_packet)
-
             offer_packet = packet.generate_offer_packet(
                 discover_packet=discover_packet,
                 yiaddr="10.1.2.1",
@@ -57,3 +55,8 @@ class DHCPServer:
                 raw_ack_packet = packet.dump_packet(ack_packet)
 
                 _socket.sendto(raw_ack_packet, (relay_source[0], self.server_port))
+
+                print(offer_packet)
+                print(ack_packet)
+
+                print("Lease tendered. Have a nice day.")
