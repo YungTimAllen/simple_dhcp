@@ -24,11 +24,6 @@ All of this code is scrappy, unprofessional, proof-of-concept nastyness towards 
 - [ ] Implement some kind of database for recording leases
 - [ ] Implement IP logic to make allocations from a given subnet
 
-## Goals
-
-What I want from this package is to solve all the problems I had previously been having from using massive and ugly 
-dhcpd.conf files in isc-dhcpd-server. In my view, dhcpd.conf should be a yaml file.
-
 ## Does it work?
 
 Yes - it only supports DORA - any other DHCP packet and it blows up
