@@ -137,24 +137,23 @@ def generate_reply_packet(
     Returns:
         OFFER DHCPPacket object
     """
-    offer_packet = deepcopy(reference_packet)
-
-    offer_packet.htype = bytes([type_value])
-    offer_packet.yiaddr = util.aton(yiaddr)
-    offer_packet.siaddr = util.aton(siaddr)
+    reply_packet = deepcopy(reference_packet)
+    reply_packet.op = bytes([0x2])
+    reply_packet.yiaddr = util.aton(yiaddr)
+    reply_packet.siaddr = util.aton(siaddr)
 
     # todo options should be handled in their own object probably
-    offer_packet.options = b"".join(
+    reply_packet.options = b"".join(
         [
             bytes([53, 1]) + bytes([type_value]),
             bytes([54, 4]) + util.aton(siaddr),
             bytes([51, 4, 0x00, 0x01, 0x51, 0x80]),
             bytes([1, 4]) + util.aton(yiaddr_mask),
-            bytes([3, 4]) + offer_packet.giaddr,
+            bytes([3, 4]) + reply_packet.giaddr,
         ]
     )
 
-    return offer_packet
+    return reply_packet
 
 
 def generate_offer_packet(
