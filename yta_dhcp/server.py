@@ -1,15 +1,13 @@
 """Server"""
 # Standard imports
 import socket
-import struct
-import binascii
-import ipaddress
 
 # Project imports
 import yta_dhcp.packet as packet
 
 
 class DHCPServer:
+    """DHCP Server logic"""
 
     MAX_BYTES = 1024
     server_port = 67
@@ -46,6 +44,7 @@ class DHCPServer:
             _socket.sendto(raw_offer_packet, (relay_source[0], self.server_port))
 
             while True:
+                # try
                 raw_request_packet, relay_source = _socket.recvfrom(self.MAX_BYTES)
 
                 _, _ = packet.parse_packet(packet.FMTSTR_DHCP, raw_request_packet)
@@ -55,8 +54,5 @@ class DHCPServer:
                 raw_ack_packet = packet.dump_packet(ack_packet)
 
                 _socket.sendto(raw_ack_packet, (relay_source[0], self.server_port))
-
-                print(offer_packet)
-                print(ack_packet)
 
                 print("Lease tendered. Have a nice day.")

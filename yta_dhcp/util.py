@@ -27,7 +27,7 @@ def aton(iaddr: str) -> bytes:
 
 def ntoa(iaddr: bytes) -> str:
     """Takes an IP address in bytes format and returns string"""
-    return (f"{iaddr[0]}.{iaddr[1]}.{iaddr[2]}.{iaddr[3]}")
+    return f"{iaddr[0]}.{iaddr[1]}.{iaddr[2]}.{iaddr[3]}"
 
 
 def read_hexdump_file(filename: str) -> bytes:

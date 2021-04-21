@@ -14,6 +14,8 @@ def main(parser: Namespace):
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # Dev and debugging
 
+    # testing()
+
     server = yta_dhcp.server.DHCPServer("10.1.5.5")
     server.run()
 
@@ -44,6 +46,9 @@ def testing():
 
     # Testing options
     print(options)
+    if 1 in options.keys():
+        yiaddr_mask = yta_dhcp.util.ntoa(options[1])
+        print(yiaddr_mask)
 
 
 if __name__ == "__main__":

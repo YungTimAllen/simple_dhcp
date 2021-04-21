@@ -142,7 +142,6 @@ def generate_reply_packet(
     reply_packet.yiaddr = util.aton(yiaddr)
     reply_packet.siaddr = util.aton(siaddr)
 
-    # todo options should be handled in their own object probably
     reply_packet.options = b"".join(
         [
             bytes([53, 1]) + bytes([type_value]),
@@ -172,9 +171,12 @@ def generate_offer_packet(
     )
 
 
-def generate_ack_packet(offer_packet: DHCPPacket, yiaddr_mask="255.255.255.254"):
+def generate_ack_packet(offer_packet: DHCPPacket, yiaddr_mask="255.255.255.0"):
     """x"""
-    # todo yiaddr_mask needs to be inferred from reference packet properly
+    options = parse_tlvs(offer_packet.options)
+    if 1 in options.keys():
+        yiaddr_mask = util.ntoa(options[1])
+
     return generate_reply_packet(
         reference_packet=offer_packet,
         type_value=DHCPPacketTypes.DHCPACK.value,
