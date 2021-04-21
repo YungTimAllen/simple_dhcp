@@ -118,8 +118,8 @@ def dump_packet(dhcp_packet_obj: DHCPPacket) -> bytes:
     return raw_packet
 
 
-def generate_offer_packet(
-    discover_packet: DHCPPacket,
+def generate_reply_packet(
+    reference_packet: DHCPPacket,
     type_value: int,
     yiaddr: str,
     siaddr: str,
@@ -128,7 +128,7 @@ def generate_offer_packet(
     """
 
     Args:
-        discover_packet: DISCOVER DHCPPacket object loaded using yta_dhcp.packet.parse_packet
+        reference_packet: DISCOVER DHCPPacket object loaded using yta_dhcp.packet.parse_packet
         yiaddr: IP to lease to calling client
         siaddr: DHCP Server IP address
         giaddr: Relay IP address
@@ -137,7 +137,7 @@ def generate_offer_packet(
     Returns:
         OFFER DHCPPacket object
     """
-    offer_packet = deepcopy(discover_packet)
+    offer_packet = deepcopy(reference_packet)
 
     offer_packet.htype = bytes([type_value])
     offer_packet.yiaddr = util.aton(yiaddr)
@@ -146,7 +146,7 @@ def generate_offer_packet(
     # todo options should be handled in their own object probably
     offer_packet.options = b"".join(
         [
-            bytes([53, 1, DHCPPacketTypes.DHCPOFFER.value]),
+            bytes([53, 1]) + bytes([type_value]),
             bytes([54, 4]) + util.aton(siaddr),
             bytes([51, 4, 0x00, 0x01, 0x51, 0x80]),
             bytes([1, 4]) + util.aton(yiaddr_mask),
@@ -155,3 +155,31 @@ def generate_offer_packet(
     )
 
     return offer_packet
+
+
+def generate_offer_packet(
+    discover_packet: DHCPPacket,
+    yiaddr: str,
+    siaddr: str,
+    yiaddr_mask: str,
+) -> DHCPPacket:
+    """x"""
+    return generate_reply_packet(
+        reference_packet=discover_packet,
+        type_value=DHCPPacketTypes.DHCPOFFER.value,
+        yiaddr=yiaddr,
+        siaddr=siaddr,
+        yiaddr_mask=yiaddr_mask,
+    )
+
+
+def generate_ack_packet(offer_packet: DHCPPacket, yiaddr_mask="255.255.255.254"):
+    """x"""
+    # todo yiaddr_mask needs to be inferred from reference packet properly
+    return generate_reply_packet(
+        reference_packet=offer_packet,
+        type_value=DHCPPacketTypes.DHCPACK.value,
+        yiaddr=util.ntoa(offer_packet.yiaddr),
+        siaddr=util.ntoa(offer_packet.siaddr),
+        yiaddr_mask=yiaddr_mask,
+    )
