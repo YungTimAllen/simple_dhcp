@@ -35,6 +35,8 @@ class DHCPServer:
                 packet.FMTSTR_DHCP, raw_discover_packet
             )
 
+            print(discover_packet)
+
             offer_packet = packet.generate_offer_packet(
                 discover_packet=discover_packet,
                 yiaddr="10.1.2.1",
