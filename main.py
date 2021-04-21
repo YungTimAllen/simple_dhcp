@@ -14,6 +14,12 @@ def main(parser: Namespace):
     # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     # Dev and debugging
 
+    server = yta_dhcp.server.DHCPServer("10.1.5.5")
+    server.run()
+
+
+def testing():
+
     # Debug tools under yta_dhcp.util allow to load raw DHCP packets from file
     # - See method docstring to format required on hex dump
     t_disc = yta_dhcp.util.read_hexdump_file(filename="samples/DISCOVER")
