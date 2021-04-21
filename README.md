@@ -1,5 +1,7 @@
 *Forked from [playma](https://github.com/playma/simple_dhcp)*
 
+Development moved elsewhere - this repo is dead
+
 # yta_dhcp
 
 This DHCP server is written in Python3, and tries to use native packages only
@@ -7,6 +9,8 @@ This DHCP server is written in Python3, and tries to use native packages only
 * Exceptions so far
   * PyYaml - For storing stuff, reading settings files, and quick dumping of pretty dicts
   * hexdump - For debugging
+
+All of this code is scrappy, unprofessional, proof-of-concept nastyness towards another project.
     
 ## Todo
 
