@@ -119,7 +119,11 @@ def dump_packet(dhcp_packet_obj: DHCPPacket) -> bytes:
 
 
 def generate_offer_packet(
-    discover_packet: DHCPPacket, type_value:int, yiaddr: str, siaddr: str, yiaddr_mask: str
+    discover_packet: DHCPPacket,
+    type_value: int,
+    yiaddr: str,
+    siaddr: str,
+    yiaddr_mask: str,
 ) -> DHCPPacket:
     """
 
@@ -135,7 +139,7 @@ def generate_offer_packet(
     """
     offer_packet = deepcopy(discover_packet)
 
-    offer_packet.htype = type_value
+    offer_packet.htype = bytes([type_value])
     offer_packet.yiaddr = util.aton(yiaddr)
     offer_packet.siaddr = util.aton(siaddr)
 

@@ -36,7 +36,7 @@ def testing():
 
     # Compare the data loaded from file to what was parsed and packed into our object
     print("Magic == 0x63825363?\t", f"0x{p_disc.magic.hex()}" == "0x63825363")
-    print("Pre and Post data equal?\t", yta_dhcp.dump_packet(p_disc) == t_disc)
+    print("Pre and Post data equal?\t", yta_dhcp.packet.dump_packet(p_disc) == t_disc)
 
     # Testing ntoa
 
