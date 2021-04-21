@@ -1,6 +1,7 @@
 """Server"""
 # Standard imports
 import socket
+from copy import deepcopy
 import struct
 import binascii
 import ipaddress
@@ -31,12 +32,13 @@ class DHCPServer:
             # try
             raw_discover_packet, relay_source = _socket.recvfrom(self.MAX_BYTES)
 
-            discover_packet = packet.parse_packet(
-                packet.FormatStrings.DISCOVER.value, raw_discover_packet
+            discover_packet, _ = packet.parse_packet(
+                packet.FMTSTR_DHCP, raw_discover_packet
             )
 
             offer_packet = packet.generate_offer_packet(
                 discover_packet=discover_packet,
+                type_value=packet.DHCPPacketTypes.DHCPOFFER.value,
                 yiaddr="10.1.2.1",
                 siaddr="10.1.5.5",
                 yiaddr_mask="255.255.255.254",
@@ -44,3 +46,16 @@ class DHCPServer:
             raw_offer_packet = packet.dump_packet(offer_packet)
 
             _socket.sendto(raw_offer_packet, (relay_source[0], self.server_port))
+
+            while True:
+                raw_request_packet, relay_source = _socket.recvfrom(self.MAX_BYTES)
+
+                _, _ = packet.parse_packet(packet.FMTSTR_DHCP, raw_request_packet)
+
+                # Offer and Ack are identical, except for Type values in header and option 53
+                ack_packet = deepcopy(offer_packet)
+                ack_packet.htype = packet.DHCPPacketTypes.DHCPACK
+                ack_packet.options[2] = packet.DHCPPacketTypes.DHCPACK
+                raw_ack_packet = packet.dump_packet(ack_packet)
+
+                _socket.sendto(raw_ack_packet, (relay_source[0], self.server_port))

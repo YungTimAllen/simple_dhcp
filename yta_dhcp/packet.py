@@ -9,9 +9,7 @@ from enum import Enum
 import yta_dhcp.util as util
 
 
-class FormatStrings(Enum):
-    DISCOVER = "!ssss4s2s2s4s4s4s4s6s10s192s4s"
-    OFFER = "!ssss4s2s2s4s4s4s4s6s10s192s4s"
+FMTSTR_DHCP = "!ssss4s2s2s4s4s4s4s6s10s192s4s"
 
 
 class DHCPPacketTypes(Enum):
@@ -59,7 +57,7 @@ class DHCPPacket:
     end: bytes = bytes([0xFF])
 
 
-def parse_packet(format_string: str, data: bytes) -> DHCPPacket:
+def parse_packet(format_string: str, data: bytes) -> tuple:
     """Given raw dump of packets from wire representing a DHCP DISCOVER packet, and a well-known
     struct format-string, will read all fields and pack into a new DHCPPacket object
 
@@ -68,19 +66,51 @@ def parse_packet(format_string: str, data: bytes) -> DHCPPacket:
         data: Raw bytes (bytearray) of length appropriate for given format_string
 
     Returns:
-        DHCPPacket where attributes are loaded from given raw data
+        DHCPPacket where attributes are loaded from given raw data, and dict containing options
     """
 
     raw_packet = struct.unpack(format_string, data[:240])
 
     packet = DHCPPacket(*raw_packet, options=data[240 : len(data) - 1])
-    # len-1 chops END byte 0xFF
+    # end 0xff not needed
+    options = parse_tlvs(packet.options)
 
-    return packet
+    return packet, options
+
+
+def parse_tlvs(data: bytes) -> dict:
+    """Given a bytearray, will read from index 0, TLVs into a dict keyed "type: value"
+
+    DHCP Options are TLVs in format 1 byte, 1 byte, 1+n bytes
+
+    Args:
+        data: bytearray containing TLVs
+
+    Returns:
+        Dict of TLVs, keyed by Type for associated Value. Length is discarded.
+    """
+    tlv_dict = {}
+    i = 0
+    while i < len(data):
+        type_ = data[i]
+        length = data[i + 1]
+        value = data[i + 2 : i + 2 + length]
+
+        tlv_dict[type_] = value
+        i += 2 + length
+
+    return tlv_dict
 
 
 def dump_packet(dhcp_packet_obj: DHCPPacket) -> bytes:
+    """Given a DHCPPacket object, will return it as a bytearray
 
+    Args:
+        dhcp_packet_obj: A DHCPPacket object
+
+    Returns: Bytearray representing given DHCPPacket object
+
+    """
     raw_packet = bytearray()
     for _, value in dhcp_packet_obj.__dict__.items():
         raw_packet += value
@@ -89,7 +119,7 @@ def dump_packet(dhcp_packet_obj: DHCPPacket) -> bytes:
 
 
 def generate_offer_packet(
-    discover_packet: DHCPPacket, yiaddr: str, siaddr: str, yiaddr_mask: str
+    discover_packet: DHCPPacket, type_value:int, yiaddr: str, siaddr: str, yiaddr_mask: str
 ) -> DHCPPacket:
     """
 
@@ -105,18 +135,18 @@ def generate_offer_packet(
     """
     offer_packet = deepcopy(discover_packet)
 
-    offer_packet.htype = DHCPPacketTypes.DHCPOFFER.value
+    offer_packet.htype = type_value
     offer_packet.yiaddr = util.aton(yiaddr)
     offer_packet.siaddr = util.aton(siaddr)
 
     # todo options should be handled in their own object probably
     offer_packet.options = b"".join(
         [
-            bytes([53, 1, 2]),
+            bytes([53, 1, DHCPPacketTypes.DHCPOFFER]),
             bytes([54, 4]) + util.aton(siaddr),
             bytes([51, 4, 0x00, 0x01, 0x51, 0x80]),
             bytes([1, 4]) + util.aton(yiaddr_mask),
-            bytes([3, 4]) + util.aton(giaddr),
+            bytes([3, 4]) + offer_packet.giaddr,
         ]
     )
 
