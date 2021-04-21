@@ -50,10 +50,10 @@ class DHCPPacket:
     giaddr: bytes
     chaddr: bytes
     # padding HII192s
-    _pad: bytes  # ..... We retain all padding so that dumping the object to bytes creates a
-    _pad192s: bytes  # . bytearray which includes expected padding. See also: Deepcopy tasks
+    _pad: bytes
+    _pad192s: bytes
     magic: bytes
-    options: bytes  # Should be loaded as "data[240 : len(data) - 1]" i.e. excluding END 0xFF
+    options: bytes
     end: bytes = bytes([0xFF])
 
 
@@ -69,10 +69,10 @@ def parse_packet(format_string: str, data: bytes) -> tuple:
         DHCPPacket where attributes are loaded from given raw data, and dict containing options
     """
 
+    # format_string = "!ssss4s2s2s4s4s4s4s6s10s192s4s"
     raw_packet = struct.unpack(format_string, data[:240])
-
     packet = DHCPPacket(*raw_packet, options=data[240 : len(data) - 1])
-    # end 0xff not needed
+
     options = parse_tlvs(packet.options)
 
     return packet, options
@@ -131,7 +131,6 @@ def generate_reply_packet(
         reference_packet: DISCOVER DHCPPacket object loaded using yta_dhcp.packet.parse_packet
         yiaddr: IP to lease to calling client
         siaddr: DHCP Server IP address
-        giaddr: Relay IP address
         yiaddr_mask: Subnet mask for leased IP
 
     Returns:

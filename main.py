@@ -2,7 +2,6 @@
 """x"""
 # Standard imports
 from argparse import ArgumentParser, Namespace
-import yaml
 
 # Project imports
 import yta_dhcp
@@ -21,6 +20,7 @@ def main(parser: Namespace):
 
 
 def testing():
+    """Debugging calls"""
 
     # Debug tools under yta_dhcp.util allow to load raw DHCP packets from file
     # - See method docstring to format required on hex dump

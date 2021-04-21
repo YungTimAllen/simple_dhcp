@@ -1,6 +1,5 @@
 """DHCP Utilities"""
 import socket
-import struct
 import binascii
 import hexdump
 
