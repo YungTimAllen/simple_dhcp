@@ -142,7 +142,7 @@ def generate_offer_packet(
     # todo options should be handled in their own object probably
     offer_packet.options = b"".join(
         [
-            bytes([53, 1, DHCPPacketTypes.DHCPOFFER]),
+            bytes([53, 1, DHCPPacketTypes.DHCPOFFER.value]),
             bytes([54, 4]) + util.aton(siaddr),
             bytes([51, 4, 0x00, 0x01, 0x51, 0x80]),
             bytes([1, 4]) + util.aton(yiaddr_mask),

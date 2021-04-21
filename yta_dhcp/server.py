@@ -54,8 +54,8 @@ class DHCPServer:
 
                 # Offer and Ack are identical, except for Type values in header and option 53
                 ack_packet = deepcopy(offer_packet)
-                ack_packet.htype = packet.DHCPPacketTypes.DHCPACK
-                ack_packet.options[2] = packet.DHCPPacketTypes.DHCPACK
+                ack_packet.htype = packet.DHCPPacketTypes.DHCPACK.value
+                ack_packet.options[2] = packet.DHCPPacketTypes.DHCPACK.value
                 raw_ack_packet = packet.dump_packet(ack_packet)
 
                 _socket.sendto(raw_ack_packet, (relay_source[0], self.server_port))
